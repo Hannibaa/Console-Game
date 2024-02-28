@@ -4,7 +4,7 @@
 
 
 
-namespace  CO {    // console object
+namespace  cu {    // console object
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 
@@ -13,17 +13,14 @@ namespace  CO {    // console object
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 	class Fire {
 
-		cu::Console&      _console;
 		float             _x, _y;
 		float             _vx, _vy;
 		wchar_t           glyph;
 		bool             _isReady;
 
 	public:
-		Fire& operator = (const Fire&) = default;
-		Fire(cu::Console& console, float x, float y, wchar_t c = L'|')
-			:_console{ console }
-			, _x{ x }, _y{ y }
+		Fire(float x, float y, wchar_t c = L'|')
+			: _x{ x }, _y{ y }
 			, _vx{ 0.f }
 			, _vy{ -0.01f }
 			, glyph{ c }
@@ -35,7 +32,7 @@ namespace  CO {    // console object
 			return cu::fPoint2d{ _x,_y };
 		}
 
-		void set_fire_parameter(float vx, float vy, wchar_t _glyph) {
+		void set_fire_parameter(float vx, float vy, wchar_t _glyph = L'|') {
 			_vx = vx;
 			_vy = vy;
 			glyph = _glyph;
@@ -49,11 +46,11 @@ namespace  CO {    // console object
 			int x = static_cast<int>(_x);
 			int y = static_cast<int>(_y);
 
-			if (y < 1 || y > _console.get_width() - 1) { _isReady = false; }
-			if (x < 1 || x > _console.get_length() - 1) { _isReady = false; }
+			if (y < 1 || y > cu::console.get_width() - 1) { _isReady = false; }
+			if (x < 1 || x > cu::console.get_length() - 1) { _isReady = false; }
 
-			_console(x + offsetX, y + offsetY, glyph);
-			_console(x + 1 + offsetX, y + offsetY, glyph);
+			cu::console(x + offsetX, y + offsetY, glyph);
+			cu::console(x + 1 + offsetX, y + offsetY, glyph);
 
 			return false;
 		}
@@ -81,7 +78,7 @@ namespace  CO {    // console object
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	class Sprite {
-		cu::Console& _console;
+
 		std::vector<std::wstring>          _vecImage;
 		std::wstring                       temp_0, temp_2;
 		std::wstring                       _shield_up, _shield_down;
@@ -127,7 +124,7 @@ namespace  CO {    // console object
 			for (const auto& wstr : _vecImage) {
 				int i{};
 				for (const auto& wchar : wstr) {
-					_console(i + x, j + y, wchar);
+					cu::console(i + x, j + y, wchar);
 					++i;
 				}
 				++j;
@@ -135,9 +132,13 @@ namespace  CO {    // console object
 		}
 
 	public:
-		Sprite(cu::Console& console, std::initializer_list<std::wstring> list)
-			: _console{ console }
-			, _x{ 10.f }, _y{ 10.f }
+		void draw() const {
+			draw(_x, _y);
+		}
+
+	public:
+		Sprite(std::initializer_list<std::wstring> list, float x = 10.f, float y = 10.f)
+			:_x{ x }, _y{ y }
 			, _vx{ 0.01f }, _vy{ 0.01f }
 			, b_back_shield{ false }
 			, b_side_shield{ false }
@@ -156,17 +157,19 @@ namespace  CO {    // console object
 
 		// this methode should be initialized after set fire parameter.
 		void create_fires() {
+			_key_fire = VK_SPACE;
+
 			vFires.reserve(45);
 			// create vector of fire of 40 object
 			for (int i = 0; i < 40; ++i) {
-				vFires.emplace_back(_console, _x, _y);
+				vFires.emplace_back(_x, _y);
 				vFires[vFires.size() - 1].set_fire_parameter(_fire_vx, _fire_vy, _fire_glyph);
 			}
 		}
 
 		// get bound 
-		cu::fRect get_bounds() const {
-			return cu::fRect(_vy, _vx, _width, _high);
+		cu::iRect get_bounds() {
+			return cu::iRect(_x, _y, _width, _high);
 		}
 
 		auto getX() const {
@@ -179,6 +182,10 @@ namespace  CO {    // console object
 
 		auto get_position() const {
 			return cu::fPoint2d{ _x, _y };
+		}
+
+		void set_position(float x, float y) {
+			_x = x; _y = y;
 		}
 
 		void set_controle_key(int up = VK_UP, int down = VK_DOWN, 
@@ -234,13 +241,13 @@ namespace  CO {    // console object
 				_vecImage[2] = temp_2;
 			}
 
-			_x = std::clamp(_x, 0.f, float(_console.get_length() - 1));
-			_y = std::clamp(_y, 0.f, float(_console.get_width() - 1));
+			_x = std::clamp(_x, 1.f, float(cu::console.get_length() - _width - 1));
+			_y = std::clamp(_y, 1.f, float(cu::console.get_width() - _high -1 ));
 
-			x = static_cast<int>(_x);
+			/*x = static_cast<int>(_x);
 			y = static_cast<int>(_y);
 
-			draw(x, y);
+			draw(x, y);*/
 		}
 
 		// get vector coordinate of firing
@@ -248,8 +255,8 @@ namespace  CO {    // console object
 			return vFires;
 		}
 
-		// firing function 2 
-		void firing_2() {
+		// firing function 
+		void firing() {
 			if (KeyReleased(_key_fire)) {
 				for (auto& f : vFires) {
 					if (!f.is_ready()) {
@@ -262,24 +269,6 @@ namespace  CO {    // console object
 
 			for (auto& f : vFires)
 				if (f.is_ready()) f.move(2,1);
-		}
-
-		// firing function
-		void firing() {
-			if (KeyReleased(_key_fire)) {
-				vFires.emplace_back(_console, _x, _y);
-				vFires[vFires.size() - 1].set_fire_parameter(_fire_vx, _fire_vy, _fire_glyph);
-			}
-
-			if (!vFires.empty()) {
-
-				for (auto& fire : vFires) fire.move();
-
-				if (vFires.size() > 20) {
-    					vFires.clear();
-				}
-			}
-
 		}
 
 	};
