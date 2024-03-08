@@ -6,7 +6,7 @@
 */
 
 
-namespace CO {
+namespace cu {
 
     class Cosmos {
 

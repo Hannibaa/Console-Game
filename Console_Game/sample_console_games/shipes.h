@@ -1,17 +1,17 @@
 #pragma once
+
 #include "Console_utility_1.hpp"
-#include <algorithm>
 
 /* 
        Author : Kadda Aoues
 	   Date   : 2024 january
 
 	   Shipes that run in console
-	   CO mean console object
+	   using namespace for console utility
 
 */
 
-namespace CO {
+namespace cu {
 
 	class sParticule {
 		cu::Console& _console;
@@ -78,8 +78,8 @@ namespace CO {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	class Particule {
+	public:
 
-		cu::Console& _console;
 		float             _x, _y;
 		float             _speedX, _speedY;
 		int               v1{ 1 }, v2{ 1 };
@@ -93,18 +93,15 @@ namespace CO {
 
 	public:
 
-		Particule(cu::Console& console, float x, float y, wchar_t  w, int id = 0)
-			:_console{ console }
-			, _x{ x }, _y{ y }
+		Particule( float x, float y, wchar_t  w, int id = 0)
+			: _x{ x }, _y{ y }
 			, _speedX{ 0.01f }, _speedY{ 0.01f }
 			, glyph(w)
 			, _id{id}
-			, _length{ console.get_length() }
-			, _width{ console.get_width() }
+			, _length{cgu::console.get_length()}
+			, _width{cgu::console.get_width()}
 			, _is_static{false}
 		{}
-
-		Particule& operator = (const Particule&) = default;
 
 		~Particule() {}
 
@@ -117,7 +114,7 @@ namespace CO {
 			_y = y;
 		}
 
-		void set_position(const cu::fPoint2d& p) {
+		void set_position(const cgu::fPoint2d& p) {
 			_x = p.x;
 			_y = p.y;
 		}
@@ -130,7 +127,11 @@ namespace CO {
 		}
 
 		auto get_position() const {
-			return cu::fPoint2d{ _x, _y };
+			return cgu::fPoint2d{ _x, _y };
+		}
+
+		cgu::iRect get_bounds() const {
+			return cgu::iRect(_x - 1, _y - 1, 3, 3);
 		}
 
 		auto getX() const {
@@ -146,43 +147,29 @@ namespace CO {
 			v2 = -v2;
 		}
 
-		void move(const cu::iPoint2d& p1, const cu::iPoint2d& p2) {
+		void revers2() {
+			v2 = -v2;
+		}
+
+		void move(const cgu::iPoint2d& p1, const cgu::iPoint2d& p2) {
 			_x += _speedX * v1;
 			_y += _speedY * v2;
 
-			int x = static_cast<int>(std::ceil(_x));
-			int y = static_cast<int>(std::ceil(_y));
+			if (_x < p1.x || _x > p2.x)  v1 *= -1;
+			if (_y < p1.y || _y > p2.y)  v2 *= -1;
 
-			if (x < p1.x || x > p2.x)  v1 *= -1;
-			if (y < p1.y || y > p2.y)  v2 *= -1;
-
-			_console(x, y, glyph);
 		}
 
 		void move() {
-			move(cu::iPoint2d{ 0,0 }, cu::iPoint2d{ _length - 1, _width - 1 });
+			move(cgu::iPoint2d{ 1,1 }, cgu::iPoint2d{ _length - 1, _width - 1 });
 		}
 
-		void move(int energy) {
-			_x += _speedX * v1;
-			_y += _speedY * v2;
 
-			if (energy > 0) --energy; else return;
-
-			_speedX -= 0.0001f;
-			_speedY -= 0.0001f;
-
-			int x = static_cast<int>(_x);
-			int y = static_cast<int>(_y);
-
-			if (x < 0 || x > _length - 1)  v1 *= -1;
-			if (y < 0 || y > _width - 1)  v2 *= -1;
-
-			_console(x, y, glyph);
+		void draw() const {
+			cgu::console(int(_x), int(_y), glyph);
 		}
 
 	};
-
 
 }
 

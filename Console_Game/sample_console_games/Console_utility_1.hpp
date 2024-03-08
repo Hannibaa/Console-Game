@@ -1,13 +1,13 @@
 #pragma once
 
 #include "CConsole.h"
+#include "wstring_utility.h"
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// 
 	//    Some subroutine utility for 
 	//    Only Subroutine associated with consoles
-	//    cu for console utility
-	//    CO for console Object
+	//    cgu for console game utility
 	// 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,12 +22,73 @@
 #define _Is_Arithmetic(T)   static_assert(std::is_arithmetic_v<T>, "Type should be arithmetic type")
 
 
-namespace cu {
+namespace cgu {
 
 	// ********************** console ****************************...//
-	cu::Console console;
+	//												
+	cgu::Console console;												
+	//												
 	// ********************** console ****************************...//
 
+	// define texture in mode text in dynamic vector
+	using wstrTexture = std::vector<std::wstring>;
+
+	template<size_t N>
+	using warrTexture = std::array<std::wstring,N>;
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 
+    //    Console Controle Font Size
+    // 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	COORD console_control_size(cgu::Console& _console, int keyA = _u('A'), int keyB = _u('B'),
+		int key_up = VK_UP, int key_down = VK_DOWN) {
+
+		auto cfi = _console.get_console_font_info();
+
+		static COORD oldFontSize = cfi.dwFontSize;
+		static COORD fontSize{ 7 , 7 };
+
+		bool static b_dirX{ false };
+		bool static b_dirY{ false };
+
+		// make size as square shape
+		if (KeyReleased(keyA)) {
+			cfi.dwFontSize.Y = oldFontSize.X;
+			cgu::console.set_console_font_info(cfi);
+		}
+
+		// return to old stat
+		if (KeyReleased(keyB)) {
+			cfi.dwFontSize.Y = oldFontSize.Y;
+			cfi.dwFontSize.X = oldFontSize.X;
+			cgu::console.set_console_font_info(cfi);
+		}
+
+		// activate which direction will be change
+		if (KeyReleased(_u('X'))) {
+			b_dirX = !b_dirX;
+		}
+		// activate direction Y:
+		if (KeyReleased(_u('Y'))) {
+			b_dirY = !b_dirY;
+		}
+
+		if (KeyReleased(key_up)) {
+			if (b_dirX)++fontSize.X;
+			if (b_dirY)++fontSize.Y;
+			cgu::console.set_console_font_size(fontSize);
+		}
+
+		if (KeyReleased(key_down)) {
+			if (b_dirX)--fontSize.X;
+			if (b_dirY)--fontSize.Y;
+			cgu::console.set_console_font_size(fontSize);
+		}
+
+		return fontSize;
+	}
 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,6 +129,11 @@ namespace cu {
 			return Point2d<U>{static_cast<U>(x), static_cast<U>(x)};
 		}
 
+		void clamped(const Point2d<T>& x_limit, const Point2d<T>& y_limit) {
+			x = std::clamp(x, x_limit.x, x_limit.y );
+			y = std::clamp(y, y_limit.x, y_limit.y );
+		}
+
 		bool operator == (const Point2d p) {
 			return this->x == p.x && this->y == p.y;
 		}
@@ -85,38 +151,38 @@ namespace cu {
 	template<typename T>
 	struct Rect {
 		static_assert(std::is_arithmetic_v<T>, "Type T should be arithmetic type");
-		T left;
-		T top;
-		T width;
-		T height;
+		T x;
+		T y;
+		T dx;
+		T dy;
 
-		Rect() :top{}, left{}, width{}, height{} {}
+		Rect() :x{}, y{}, dx{}, dy{} {}
 
-		Rect(T _left, T _top, T _width, T _height)
-			: left{ _left }
-			, top{_top}
-			, width{ _width }
-			, height{ _height }
+		Rect(T _x, T _y, T _dx, T _dy)
+			: x{ _x }
+			, y{ _y }
+			, dx{ _dx }
+			, dy{ _dy }
 		{}
 
 		template<typename U>
 		explicit Rect(const Rect<U>& rect)
-			: top {static_cast<T>(rect.top)}
-			, left{ static_cast<T>(rect.left) }
-			, width {static_cast<T>(rect.width)}
-			, height{static_cast<T>(rect.height)}
+			: x {static_cast<T>(rect.x)}
+			, y{ static_cast<T>(rect.y) }
+			, dx {static_cast<T>(rect.dx)}
+			, dy{static_cast<T>(rect.dy)}
 		{}
 
-		bool contain(T x, T y) const {
-			return (x >= left && x < left + width) &&
-				   (y >= top && y < top + height);
+		bool contain(T _x, T _y) const {
+			return (_x >= x && _x < x + dx) &&
+				   (_y >= y && _y < y + dy);
 		}
 
 		bool contain(const Rect<T>& rect) const {
-			return contain(rect.left, rect.top) || 
-				   contain(rect.left + rect.width - 1, rect.top)|| 
-				   contain(rect.left, rect.top + rect.height - 1)|| 
-				   contain(rect.left + rect.width - 1, rect.top + rect.height - 1);
+			return contain(rect.x, rect.y) || 
+				   contain(rect.x + rect.dx - 1, rect.y)|| 
+				   contain(rect.x, rect.y + rect.dy - 1)|| 
+				   contain(rect.x + rect.dx - 1, rect.y + rect.dy - 1);
 		}
 
 	};
@@ -156,7 +222,7 @@ namespace cu {
 			(pos2.y - 1 <= pos1.y && pos1.y <= pos2.y + 1);
 	}
 
-	// Overloap
+	// Overloap?
 	template<typename O1, typename O2>
 	bool is_collid(O1& p1, O2& p2) {
 
@@ -164,22 +230,23 @@ namespace cu {
 		return false;
 	}
 
+	// treatment of collision between two object
 	template<typename O1, typename O2>
-	void collision_process(O1& q1, O2& q2) {
+	void collision_process(O1& q1, O2& q2, float aproxi = 2.f) {
 
 		auto p1 = q1.get_position();
 		auto p2 = q2.get_position();
 		float lx = int(p1.x - p2.x) < 0 ? -1.0 : int(p1.x - p2.x) == 0 ? 0.f : 1.f;
 		float ly = int(p1.y - p2.y) < 0 ? -1.0 : int(p1.y - p2.y) == 0 ? 0.f : 1.f;
-		q1.set_position(p1.x + lx / 2.f, p1.y + ly / 2.f);
-		q2.set_position(p2.x - lx / 2.f, p2.y - ly / 2.f);
+		q1.set_position(p1.x + lx / aproxi, p1.y + ly / aproxi);
+		q2.set_position(p2.x - lx / aproxi, p2.y - ly / aproxi);
 
 	}
 
+	// get out font :|:
+	bool get_out(int Key_Escape = VK_ESCAPE) {
 
-	bool get_out() {
-
-		if (KeyOn(VK_ESCAPE)) return true;
+		if (KeyOn(Key_Escape)) return true;
 		else return false;
 
 	}
@@ -187,7 +254,7 @@ namespace cu {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
-//    Functions
+//    Functions of drawing lines and text
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 	void draw_hline(int y, int x0, int x1, wchar_t c = L'\x2588') {
@@ -202,13 +269,13 @@ namespace cu {
 			console(x, k, c);
 	}
 
-	void draw_rectangle(const cu::iRect& rect, wchar_t c = L'\x2588') {
+	void draw_rectangle(const cgu::iRect& rect, wchar_t c = L'\x2588') {
 
-		draw_hline(rect.top, rect.left, rect.left + rect.width, c);
-		draw_hline(rect.top + rect.height, rect.left, rect.left + rect.width, c);
+		draw_hline(rect.x, rect.y, rect.x + rect.dx, c);
+		draw_hline(rect.x + rect.dy, rect.x, rect.x + rect.dx, c);
 
-		draw_vline(rect.left, rect.top, rect.top + rect.height, c);
-		draw_vline(rect.left + rect.width, rect.top, rect.top + rect.height, c);
+		draw_vline(rect.x, rect.y, rect.y + rect.dy, c);
+		draw_vline(rect.x + rect.dx, rect.y, rect.y + rect.dy, c);
 	}
 
 	void print_text_at(const std::wstring& wstr, int x, int y) {
@@ -218,21 +285,6 @@ namespace cu {
 		}
 	}
 
-	std::pair<int, int> get_boxed_text_dimension(const std::wstring& text, wchar_t rl = L'\n') {
-
-		int max = 0;
-		int lines = 0;
-
-		for (int i = 0; i < text.size(); ++i) {
-			int count{};
-			while (text[i] != rl) { ++count; ++i; if (i >= text.size()) break; }
-			max = (count >= max) ? count : max;
-			++lines;
-		}
-
-		return std::pair{ max, lines };
-
-	}
 
 	// Print the text inside the box
 	void print_text_in_box(int x, int y, const std::wstring text, wchar_t rl = L'\n') {
@@ -250,7 +302,8 @@ namespace cu {
 		}
 	}
 
-	// message box adem
+
+	// message box 
 	void message_box(int x, int y, const std::wstring& sTitle, const std::wstring& sBody)
 	{
 		// making box for message 
@@ -261,7 +314,10 @@ namespace cu {
 			+---------------------------------------+	 4
 		*/
 		int sz_title = (int)sTitle.size();
-		auto [max_l, lines] = get_boxed_text_dimension(sBody);
+		auto [max_l, lines] = Str::get_boxed_text_dimension(sBody);
+		
+		x = x - 1 - max_l / 2;
+		y = y - 1 - lines / 2;
 
 		if (max_l < sz_title + 8) max_l = sz_title + 8;
 
@@ -289,4 +345,5 @@ namespace cu {
 		// put the text inside box 
 		print_text_in_box(x + 1, y + 1, sBody);
 	}
+
 }

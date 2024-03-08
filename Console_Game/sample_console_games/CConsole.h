@@ -4,7 +4,6 @@
 #include <Windows.h>
 #include <wchar.h>
 #include <algorithm>
-#include <MyLib/Console_Library/Unicode_table.h>
 
 /*
                              Console Class  
@@ -16,9 +15,10 @@
 */
 
 
+namespace cgu {
 
-
-namespace cu {
+	float           fps{ 1.f };        // frame per seconds
+	float           elps{};			   // elapsed time 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 
@@ -82,6 +82,17 @@ namespace cu {
 				screen[i + j * iscrLength] = w;
 		}
 
+		void operator()(int i, int j, const std::wstring& text) {
+			if ((i > -1 && i < iscrLength - text.size()) && (j > -1 && j < iscrWidth)) {
+				std::memcpy(&screen[i + j * iscrLength], text.data(), sizeof(wchar_t) * text.size());
+			}
+		}
+
+		// ajust frames par seconds
+		void ajust_frames_per_sec(float f) const {
+			fps = f;
+		}
+
 		virtual void set_parameter() override {
 
 		}
@@ -94,8 +105,60 @@ namespace cu {
 			return this->iscrLength;
 		}
 
+		CONSOLE_FONT_INFOEX get_console_font_info() {
+			CONSOLE_FONT_INFOEX cfi{};
+			cfi.cbSize = sizeof(CONSOLE_FONT_INFOEX);
+			if (!GetCurrentConsoleFontEx(hConsole, FALSE, &cfi)) {
+				Error(L"GetCurrentConsoleFontEx");
+			}
+			return cfi;
+		}
+
+		bool set_console_font_info(CONSOLE_FONT_INFOEX cfi) {
+			if (!SetCurrentConsoleFontEx(hConsole, FALSE, &cfi)) {
+				Error(L"SetCurrentConsoleFontEx");
+				return false;
+			}
+			return true;
+		}
+
+		// set directly size of font 
+		bool set_console_font_size(short fontX, short fontY) {
+			CONSOLE_FONT_INFOEX cfi = get_console_font_info();
+			if (cfi.dwFontSize.X == 0 || cfi.dwFontSize.Y == 0) {
+				Error(L"Console Font Info");
+				return false;
+			}
+
+			cfi.dwFontSize.X = fontX;
+			cfi.dwFontSize.Y = fontY;
+
+			if (!set_console_font_info(cfi)) {
+				Error(L"SetCurrentConsoleFontEx");
+				return false;
+			}
+
+			return true;
+		}
+
+		// overloading 
+		bool set_console_font_size(COORD fontsize) {
+			return set_console_font_size(fontsize.X, fontsize.Y);
+		}
+
+		// redimentioning windows
+		bool set_windows_dimension() {
+			// 6. Set Physical Console Window Size
+			SMALL_RECT temp_rect = { 0,0,(short)(iscrLength - 1), (short)(iscrWidth - 1) };
+			if (!SetConsoleWindowInfo(hConsole, TRUE, &temp_rect)) {
+				Error(L"SetConsoleWindowInfo");
+				return false;
+			}
+			return true;
+		}
+
 		// drawing in screen 
-		virtual void draw() const  {
+		virtual void display() const  {
 			DWORD dwByteWritten = 0;
 			WriteConsoleOutputCharacter(hConsole, screen, iscrLength * iscrWidth, { 0,0 }, &dwByteWritten);
 
