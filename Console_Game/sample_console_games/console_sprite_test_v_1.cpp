@@ -1,26 +1,33 @@
-#include "../include/sprite_v_3.h"
 #include "MyLib/chrono/Game_timer.h"
 #include "MyLib/random_generator.h"
+#include "../include/animation_sprite.hpp"
+#include "../include/Cinematic.hpp"
 
 
 
+int main_animation() {
 
-int main() {
 	int g_lx = 145;
 	int g_ly = 35;
 
 	cgu::console.construct_console(g_lx, g_ly);
 
 
-	cgu::ISprite* ptr{};
-	using TSprite = cgu::StaticSprite<4, 4>;
+	// declare object
+	cgu::AnimatedSprite      anime{ 50,13 };
+	cgu::cin::Motion         move;
 
-	Str::replace_all_by(cgu::wstrTetrisPiece[0], L'.', L' ');
-	TSprite                       stext{ cgu::wstrTetrisPiece[0], 30, 13};
-	cgu::DynSprite                dtext{ L"hello is there any think like cpp here",10,3,50,15 };
+	move.set_speed(0.6f, 0.7f);
+	move.set_bounds(1, 1, g_lx, g_ly - 5);
+	move.set_auxillary_key({ _u('U'), _u('D'), 0 });
 
-	cgu::Motion                   move;
-	cgu::Collision                collision;
+	anime.add_image(LR"( /**"________|*****-------(*****))", 13, 3);
+	anime.add_image(LR"( /**"________|*****-------(**  *))", 13, 3);
+	anime.add_image(LR"( /**"________|*****-------(*  **))", 13, 3);
+	anime.add_image(LR"( /**"________|*****-------(  ***))", 13, 3);
+	//anime.add_image(LR"( O/\||)", 2, 3);
+	anime.set_speed(0.08f);
+
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
@@ -42,9 +49,11 @@ int main() {
 	Time::Game_Timer   timer;
 	bool     bPause{ false };
 	wchar_t  title[255]{};
+	cgu::Dt60 = 1.4f;
 
 	while (true) {
 		// title
+		cgu::Dtime = cgu::Dt60 * 60.f / cgu::fps;
 		timer.reset();
 		swprintf_s(title, 255, L"Console fps[%5.2f]", cgu::fps);
 		TITLE(title);
@@ -62,45 +71,37 @@ int main() {
 			goto __next;
 		}
 
-		if (KeyReleased(_u('S'))) {
-			if (!ptr)
-			 ptr = (&stext);
-			else {
-				rng::iRG<int>   irand;
-				int i = irand(0, 6);
-				Str::replace_all_by(cgu::wstrTetrisPiece[i], L'.', L' ');
-				dynamic_cast<TSprite*>(ptr)->set_buffer(cgu::wstrTetrisPiece[i]);
-			}
+		// cinematic : 
+		move(&anime,  cgu::Dtime  );
 
-		}
 
-		if (KeyReleased(_u('D'))) {
-			//ptr = dynamic_cast<cgu::DynSprite*>(&dtext) ;
-			ptr = nullptr;
-		}
+		// drawing
+		anime.animate(cgu::Dtime);
+		anime.draw();
 
-		// Cinamatics
-
-		if (ptr) move(dynamic_cast<TSprite*>(ptr), 1.78f * 60.f / cgu::fps );
-
-		cgu::draw_rectangle({ 0,0, g_lx - 1, g_ly - 1 });
-
-		// drawing function
-		if (ptr) {
-			ptr->draw();
-		}
 
 	__next:
+		cgu::draw_rectangle({ 0,0, g_lx - 1, g_ly - 1 });
+
 		cgu::console.display();
 
 		if (cgu::get_out()) {
 			break;
 		}
 
-		cgu::fps = 1.f / timer.get_elapsed_time();
+		cgu::elps = timer.get_elapsed_time();
+		cgu::fps = 1.f / cgu::elps;
 	}
 
 
 
+	return 0;
+}
 
+
+int main() {
+	
+	main_animation();
+
+	return 0;
 }
