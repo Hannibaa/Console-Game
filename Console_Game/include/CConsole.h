@@ -19,6 +19,8 @@ namespace cgu {
 
 	float           fps{ 1.f };        // frame per seconds
 	float           elps{};			   // elapsed time 
+	float           Dt60{ 1.5f };
+	float           Dtime{};           // Dt = Dt60 * 60.f / fps;
 	wchar_t         title[255]{};
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 

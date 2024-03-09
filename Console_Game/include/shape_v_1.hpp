@@ -4,61 +4,22 @@
  
  */
 
-#include "Console_utility_1.hpp"
-#include "wstring_utility.h"
+#include "sprite_v_3.h"
 
 
 
 namespace   cgu {
 
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 
-    //    Interface for sprite in general   
-    // 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-	class ISprite {
-	protected:
-		std::wstring    _buffer;
-		cgu::fPoint2d   _pos;
-	public:
-		ISprite()
-			:ISprite(L"")
-		{}
-
-		ISprite(const std::wstring buffer, int x = 10 , int y = 10)
-			: _buffer{buffer}, _pos{float(x),float(y)}
-		{}
-
-		virtual ~ISprite() = default;
-
-		virtual void draw() const = 0;   // we don't know how to draw it in screen buffer.
-
-		virtual cgu::iRect    get_bounds() const = 0;
-		virtual cgu::fPoint2d get_dimension() const = 0;
-
-		wchar_t operator[](int n) const {
-			return _buffer[n];
-		}
-
-		cgu::fPoint2d get_position() const {
-			return _pos;
-		}
-		void set_position(const cgu::fPoint2d& pos) {
-			_pos = pos;
-		}
-
-	};
 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 
-    //    Sprite of tetromino
+    //    Define Boxes shapes
     // 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	template<int dimX, int dimY>
-	class Box : public ISprite {
+	class Box : public cgu::ISprite {
 		static_assert(dimX > 0 && dimY > 0, "dimension should be positive");
 
 		void init_buffer() {
@@ -81,7 +42,7 @@ namespace   cgu {
 		Box() : Box(10, 10){}
 
 		Box(int x, int y)
-			: ISprite(std::wstring(dimX * dimY, L' '),x,y)
+			: cgu::ISprite(std::wstring(dimX * dimY, L' '),x,y)
 		{
 			init_buffer();
 		}
@@ -130,7 +91,7 @@ namespace   cgu {
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	template<int dimX, int dimY>
-	class LineBox : public ISprite {
+	class LineBox : public cgu::ISprite {
 		static_assert(dimX > 1 && dimY > 1, "dimension should be positive");
 
 		void init_buffer() {
@@ -309,10 +270,10 @@ namespace   cgu {
 
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
-// 
-//    Dynamic Boxes
-// 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////
+    // 
+    //    Dynamic Boxes
+    // 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	class DynBox : public ISprite {
 

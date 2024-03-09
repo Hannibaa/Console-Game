@@ -1,5 +1,6 @@
 #pragma once
-#include "shape_v_1.hpp"
+#include "Console_utility_1.hpp"
+#include "wstring_utility.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
@@ -20,6 +21,54 @@ namespace cgu {
         int k = N % ly;
         return (N - k) / ly + (ly - 1 - k) * lx;
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 
+//    Interface for sprite in general   
+// 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    class ISprite {
+    protected:
+        std::wstring    _buffer;
+        cgu::fPoint2d   _pos;
+        int             _id;
+    public:
+        ISprite()
+            :ISprite(L"")
+        {}
+
+        ISprite(const std::wstring buffer, int x = 10, int y = 10)
+            : _buffer{ buffer }, _pos{ float(x),float(y) }
+        {}
+
+        virtual ~ISprite() = default;
+
+        virtual void draw() const = 0;   // we don't know how to draw it in screen buffer.
+
+        virtual cgu::iRect    get_bounds() const = 0;
+        virtual cgu::fPoint2d get_dimension() const = 0;
+
+        wchar_t operator[](int n) const {
+            return _buffer[n];
+        }
+
+        cgu::fPoint2d get_position() const {
+            return _pos;
+        }
+        void set_position(const cgu::fPoint2d& pos) {
+            _pos = pos;
+        }
+
+        void set_id(int id) {
+            _id = id;
+        }
+
+        int get_id() const {
+            return _id;
+        }
+
+    };
 
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -168,89 +217,4 @@ namespace cgu {
 
     };
 
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // 
-    //    Motion definition
-    //    
-    // 
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    class Motion {
-        cgu::fPoint2d   m_speed;
-        cgu::iRect      m_field;
-    public:
-        Motion(cgu::fPoint2d speed = {1.f, 1.f}
-               ,cgu::iRect   field = {1, 1 , 144, 34 })
-            :m_speed{speed}
-            ,m_field{field}
-        {}
-
-        template<typename T>
-        void operator() (T* ptr, float f) {
-            cgu::fPoint2d  p = ptr->get_position();
-            cgu::fPoint2d  dim = ptr->get_dimension();
-            //if (KeyPressed(VK_DOWN)) {
-            //    p.y += m_speed.y * f;
-            //}
-             p.y += f * m_speed.y / 2.5f;
-
-            if (KeyPressed(VK_UP)) {
-                p.y -= m_speed.y * f;
-            }
-
-            if (KeyPressed(VK_LEFT)) {
-                p.x -= m_speed.x * f;
-            }
-
-            if (KeyPressed(VK_RIGHT)) {
-                p.x += m_speed.x * f;
-            }
-
-            // ajust speed 
-            if (KeyReleased(_u('U'))) {
-                m_speed.x += 0.1f;
-                m_speed.y += 0.1f;
-            }
-            if (KeyReleased(_u('D'))) {
-                m_speed.x -= 0.1f;
-                m_speed.y -= 0.1f;
-            }
-
-            if (KeyReleased(_u('R'))) {
-                ptr->rotate();
-            }
-
-            p.clamped({ 1.f, float(m_field.dx) - dim.x }, { 1.f , float(m_field.dy) - dim.y });
-
-            ptr->set_position(p);
-        }
-    };
-
-    class Collision {
-    public:
-        template<typename TSprite>
-        bool is_collid(TSprite& t) {
-            cgu::fPoint2d pt = t.get_position();
-            cgu::fPoint2d dimt = t.get_dimension();
-
-            for (int i = 0; i != dimt.x; ++i)
-            {
-                for (int j = 0; j != dimt.y; ++j)
-                {
-                    int n = i + j * dimt.x;
-                    if (t[n] != L' ')
-                    {
-                        if (cgu::console[pt.x + i +(pt.y + j) * cgu::console.get_length()] != L' ')
-                        {
-                            return true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        }
-    };
 }
