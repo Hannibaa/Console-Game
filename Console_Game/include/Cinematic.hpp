@@ -61,10 +61,10 @@ namespace cgu {
         public:
 
             void set_controle_direction_key(const short(&controle)[4]) {
-                key_up = controle[0];
-                key_down = controle[1];
+                key_up    = controle[0];
+                key_down  = controle[1];
                 key_right = controle[2];
-                key_left = controle[3];
+                key_left  = controle[3];
             }
 
             void set_auxillary_key(const int(&controle)[3]) {
@@ -113,11 +113,57 @@ namespace cgu {
                 //    ptr->rotate();
                 //}
 
-                p.clamped({ 1.f, float(m_field.dx) - dim.x }, { 1.f , float(m_field.dy) - dim.y });
+                p.clamped({ float(m_field.x), float(m_field.dx) - dim.x}, {float(m_field.y) , float(m_field.dy) - dim.y});
 
                 ptr->set_position(p);
             }
         };
+
+
+        // Generale Free Motion in box
+
+        class FreeMotion : public cgu::cin::IMotion {
+
+            float v1{ 1.0f };
+            float v2{ 1.0f };
+
+        public:
+
+            template<typename TObj>
+            void operator()(TObj* ptr, float Dt)
+            {
+                cgu::fPoint2d  p = ptr->get_position();
+
+                p.x += m_speed.x * Dt * v1;
+                p.y += m_speed.y * Dt * v2;
+
+                if ((int)p.x < m_field.x || (int)p.x > m_field.dx) v1 *= -1.f;
+                if ((int)p.y < m_field.y || (int)p.y > m_field.dy) v2 *= -1.f;
+
+                ptr->set_position(p);
+
+            }
+
+			void reverse(int _case = 0) {
+				switch (_case) {
+				case 0:
+					v1 = -v1;
+					v2 = -v2;
+					break;
+				case 1:
+                    v1 = -v1;
+                    break;
+                case 2:
+                    v2 = -v2;
+                    break;
+                default:
+                    break;
+				}
+
+			}
+
+        };
+
 
     }  // end namespace Cinematic
 

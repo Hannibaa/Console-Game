@@ -107,6 +107,13 @@ namespace cgu {
 	const wchar_t  whLine = 0x2500;
 	const wchar_t  wvLine = 0x2502;
 
+	// 
+	const wchar_t  wT00   = 0x252c;
+	const wchar_t  wT10   = 0x251c;
+	const wchar_t  wT01   = 0x2524;
+	const wchar_t  wT11   = 0x2534;
+	const wchar_t  wX     = 0x253c;
+
 	// wchar bracket
 
 	const wchar_t wBracket0 = L'[';
@@ -176,6 +183,10 @@ namespace cgu {
 		bool contain(T _x, T _y) const {
 			return (_x >= x && _x < x + dx) &&
 				   (_y >= y && _y < y + dy);
+		}
+
+		bool contain(const Point2d<T>& p) const {
+			return contain(p.x, p.y);
 		}
 
 		bool contain(const Rect<T>& rect) const {
@@ -316,9 +327,6 @@ namespace cgu {
 		int sz_title = (int)sTitle.size();
 		auto [max_l, lines] = Str::get_boxed_text_dimension(sBody);
 		
-		x = x - 1 - max_l / 2;
-		y = y - 1 - lines / 2;
-
 		if (max_l < sz_title + 8) max_l = sz_title + 8;
 
 		int x0 = x + 3 + sz_title;
@@ -346,4 +354,18 @@ namespace cgu {
 		print_text_in_box(x + 1, y + 1, sBody);
 	}
 
+
+	void progress_bar(std::wstring name ,
+		int x, int y, int length, int value, int value_max = 30) 
+	{
+		if (value > value_max) value = value_max;
+		int lv = float(length) * (float(value) / float(value_max));
+
+		std::wstring wspace(length - lv, 0x2591);
+		std::wstring wblank(lv, 0x2588);
+		name.resize(10, L' ');
+		std::wstring bar = name + wblank + wspace;
+
+		print_text_at(bar, x, y);
+	}
 }

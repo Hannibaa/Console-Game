@@ -71,6 +71,58 @@ namespace cgu {
     };
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+// 
+//    Templated sprite
+// 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template<typename Type>
+    class TISprite {
+    protected:
+        Type            _buffer;
+        cgu::fPoint2d   _pos;
+        int             _id;
+
+    public:
+        using type_value = Type;
+
+        TISprite()
+            :TISprite(Type{})
+        {}
+
+        TISprite(const Type buffer, int x = 10, int y = 10)
+            : _buffer{ buffer }, _pos{ float(x),float(y) }, _id{}
+        {}
+
+        virtual ~TISprite() = default;
+
+        virtual void draw() const = 0;                      // we don't know how to draw it in screen buffer.
+
+        virtual cgu::iRect    get_bounds() const = 0;       //  override
+        virtual cgu::fPoint2d get_dimension() const = 0;    //  override
+
+        cgu::fPoint2d get_position() const {
+            return _pos;
+        }
+        void set_position(const cgu::fPoint2d& pos) {
+            _pos = pos;
+        }
+
+        void set_position(float x, float y) {
+            _pos.x = x; 
+            _pos.y = y;
+        }
+
+        void set_id(int id) {
+            _id = id;
+        }
+
+        int get_id() const {
+            return _id;
+        }
+    };
+
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 
     //     CLASS SPRITE   
