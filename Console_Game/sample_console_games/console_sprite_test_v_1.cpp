@@ -21,13 +21,14 @@ int main_animation() {
 	move.set_bounds(1, 1, g_lx, g_ly - 5);
 	move.set_auxillary_key({ _u('U'), _u('D'), 0 });
 
-	anime.add_image(LR"( /**"________|*****-------(*****))", 13, 3);
-	anime.add_image(LR"( /**"________|*****-------(**  *))", 13, 3);
-	anime.add_image(LR"( /**"________|*****-------(*  **))", 13, 3);
-	anime.add_image(LR"( /**"________|*****-------(  ***))", 13, 3);
-	//anime.add_image(LR"( O/\||)", 2, 3);
+	anime.add_image(LR"( /**"________|*****-------(*****))","roling", 13, 3);
+	anime.add_image(LR"( /**"________|*****-------(**  *))","roling", 13, 3);
+	anime.add_image(LR"( /**"________|*****-------(*  **))","roling", 13, 3);
+	anime.add_image(LR"( /**"________|*****-------(  ***))","roling", 13, 3);
 	anime.set_speed(0.08f);
 
+	anime.add_image(LR"( /**"_______ |*****------ (*****))", "fire", 13, 3);
+	anime.add_image(LR"( /**"______  |*****------ (*****))", "fire", 13, 3);
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
 // 
@@ -46,9 +47,11 @@ int main_animation() {
 //  Main Loop  
 // 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
-	Time::Game_Timer   timer;
-	bool     bPause{ false };
-	wchar_t  title[255]{};
+	Time::Game_Timer     timer;
+	bool                 bPause{ false };
+	wchar_t              title[255]{};
+	std::string          strAction;
+
 	cgu::Dt60 = 1.4f;
 
 	while (true) {
@@ -71,13 +74,20 @@ int main_animation() {
 			goto __next;
 		}
 
+
+		// firing
+		if ( KeyPressed(_u('F'))) {
+			strAction = "fire";
+		}
+		else {
+			strAction = "roling";
+		}
 		// cinematic : 
 		move(&anime,  cgu::Dtime  );
 
-
 		// drawing
-		anime.animate(cgu::Dtime);
-		anime.draw();
+		anime.animate(strAction, cgu::Dtime);
+		anime.draw(strAction);
 
 
 	__next:
