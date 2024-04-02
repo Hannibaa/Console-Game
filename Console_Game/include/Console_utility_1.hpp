@@ -141,6 +141,12 @@ namespace cgu {
 			y = std::clamp(y, y_limit.x, y_limit.y );
 		}
 
+		template<typename U>
+		void clamped(U xmin, U xmax, U ymin, U ymax) {
+			x =static_cast<T>( std::clamp<U>(x, xmin, xmax));
+			y =static_cast<T>( std::clamp<U>(y, ymin, ymax));
+		}
+
 		bool operator == (const Point2d p) {
 			return this->x == p.x && this->y == p.y;
 		}
