@@ -52,6 +52,7 @@ int main() {
     std::wstring  wstrMenuTail = LR"(M:Menu ESC:Quite G:Gener R:Rmv)";
     std::wstring  wstrMenuTitle = L"Menu";
     std::wstring  wstrMenuBody = LR"(M: Menu
+A: Generate 100 particules
 G: Create one element free
 R: Pop back one element.
 ESC: Quite Game)";
