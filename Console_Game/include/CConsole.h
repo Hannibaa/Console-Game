@@ -19,9 +19,10 @@ namespace cgu {
 
 	float           fps{ 1.f };        // frame per seconds
 	float           elps{};			   // elapsed time 
-	float           Dt60{ 1.5f };
+	float           Dt60{ 1.5f };      // 
 	float           Dtime{};           // Dt = Dt60 * 60.f / fps;
 	wchar_t         title[255]{};
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////
     // 
     //    Console class Implementation   
@@ -62,19 +63,6 @@ namespace cgu {
 		Console()
 			: DConsole(145, 35)
 		{
-			// 3. Create screen buffer handle
-			hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL,
-				CONSOLE_TEXTMODE_BUFFER, NULL);
-
-			if (hConsole == INVALID_HANDLE_VALUE)
-				Error(L"Bad Handle");
-
-			// 3.1 get oldmode saved
-			GetConsoleMode(hConsole, &dwOldmode);
-
-			// 4. Set console screen buffer handle to actual console
-			if (!SetConsoleActiveScreenBuffer(hConsole) ) 
-				Error(L"SetConsoleActiveScreenBuffer");
 
 		}
 
@@ -182,6 +170,7 @@ namespace cgu {
 			CloseHandle(hConsole);
 		}
 
+		// Main Function
 		void construct_console(int length, int width) {
 
 			iscrLength = length;
@@ -192,6 +181,20 @@ namespace cgu {
 
 			// 2. fill up screen with blank
 			wmemset(screen, L' ', iscrLength * iscrWidth);
+
+			// 3. Create screen buffer handle
+			hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL,
+				CONSOLE_TEXTMODE_BUFFER, NULL);
+
+			if (hConsole == INVALID_HANDLE_VALUE)
+				Error(L"Bad Handle");
+
+			// 3.1 get oldmode saved
+			GetConsoleMode(hConsole, &dwOldmode);
+
+			// 4. Set console screen buffer handle to actual console
+			if (!SetConsoleActiveScreenBuffer(hConsole))
+				Error(L"SetConsoleActiveScreenBuffer");
 
 
 			// 5. Sizing Screen Buffer :
@@ -221,6 +224,12 @@ namespace cgu {
 			WriteConsoleOutputCharacter(hConsole, screen, iscrLength * iscrWidth, { 0,0 }, &dwByteWritten);
 
 		}
+
+		void print_text(const std::wstring text, WORD attr, int x, int y) {
+			::SetConsoleTextAttribute(hConsole, attr);
+			(*this)(x, y, text);
+		}
+
 
 	private:
 
