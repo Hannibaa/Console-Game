@@ -11,6 +11,46 @@
 
 
 namespace cgu {
+    // Some predifined pattern 
+    std::wstring  tetromino[7]
+        = { L"..X."
+            L"..X."
+            L"..X."
+            L"..X.",
+
+            L"...."
+            L".XX."
+            L".XX."
+            L"....",
+
+            L"..X."
+            L".XX."
+            L".X.."
+            L"....",
+
+            L".X.."
+            L".XX."
+            L"..X."
+            L"....",
+
+            L".X.."
+            L"XXX."
+            L"...."
+            L"....",
+
+            L"...."
+            L"XX.."
+            L".X.."
+            L".X..",
+
+            L"...."
+            L".XX."
+            L".X.."
+            L".X.."
+    };
+
+
+    // Rotating inside wstring or string as it is string
 
     int _rot(int n, int lx) {
         int k = n % lx;
@@ -58,6 +98,11 @@ namespace cgu {
         }
         void set_position(const cgu::fPoint2d& pos) {
             _pos = pos;
+        }
+
+        void set_position(float x, float y) {
+            _pos.x = x;
+            _pos.y = y;
         }
 
         void set_id(int id) {
@@ -128,44 +173,8 @@ namespace cgu {
     //     CLASS SPRITE   
     // 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////
-    std::wstring  wstrTetrisPiece[7]
-                          = { L"..X."
-                              L"..X."
-                              L"..X."
-                              L"..X.",
-                              
-                              L"...."
-                              L".XX."
-                              L".XX."
-                              L"....",
 
-                              L"..X."
-                              L".XX."
-                              L".X.."
-                              L"....",
-
-                              L".X.."
-                              L".XX."
-                              L"..X."
-                              L"....",
-
-                              L".X.."
-                              L"XXX."
-                              L"...."
-                              L"....",
-
-                              L"...."
-                              L"XX.."
-                              L".X.."
-                              L".X..",
-
-                              L"...."
-                              L".XX."
-                              L".X.."
-                              L".X.."
-    };
-                                  
-   // pre-dimension of buffer in 2 dimension 
+    // pre-dimension of buffer in 2 dimension 
     template<int _dimX, int _dimY> 
     class StaticSprite : public cgu::ISprite {
 
@@ -177,8 +186,16 @@ namespace cgu {
         StaticSprite(const std::wstring& text, int x, int y)
         {
             _buffer = text;
-            _buffer.resize(_dimX * _dimY, L' ');
+            if (_buffer.size() != _dimX*_dimY)
+                _buffer.resize(_dimX * _dimY, L' ');
             set_position({ float(x), float(y) });
+        }
+
+        explicit StaticSprite(wchar_t c, float x = 10.f, float y = 10.f)
+            :StaticSprite(L"", x, y)
+        {
+            _buffer.clear();
+            _buffer.resize(_dimX * _dimY, c);
         }
 
         void set_buffer(const std::wstring new_text) {
