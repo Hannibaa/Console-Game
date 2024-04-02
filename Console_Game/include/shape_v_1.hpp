@@ -304,7 +304,7 @@ namespace   cgu {
 		{
 			if (_dimX < 1) _dimX = 1;
 			if (_dimY < 1) _dimY = 1;
-
+			_buffer.resize(_dimX * _dimY, L' ');
 			set_position({ float(x), float(y) });
 			init_buffer();
 		}
