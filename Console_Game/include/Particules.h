@@ -23,6 +23,10 @@ namespace cgu{
 			return cgu::iRect{ int(_pos.x), int(_pos.y) , 2 , 2 };
 		}
 
+		cgu::fRect fget_bounds() const {
+			return cgu::fRect{ _pos.x, _pos.y, 2.f, 2.f };
+		}
+
 		virtual cgu::fPoint2d get_dimension() const {
 			return cgu::fPoint2d{ 1.f,1.f };
 		}
