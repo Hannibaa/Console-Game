@@ -17,11 +17,11 @@ namespace cgu {
         class IMotion {
         protected:
             cgu::fPoint2d   m_speed;
-            cgu::iRect      m_field;
+            cgu::fRect      m_field;
             float           m_gravity;
         public:
             IMotion(cgu::fPoint2d speed = { 1.f, 1.f }
-                , cgu::iRect   field = { 1, 1 , 144, 34 })
+                , cgu::fRect   field = { 1.f, 1.f , 144.f, 34.f })
                 :m_speed{ speed }
                 , m_field{ field }
                 , m_gravity{ 9.81f }
@@ -36,14 +36,14 @@ namespace cgu {
                 return m_speed;
             }
 
-            void set_bounds(int x, int y, int dx, int dy) {
+            void set_bounds(float x, float y, float dx, float dy) {
                 m_field.x = x;
                 m_field.y = y;
                 m_field.dx = dx;
                 m_field.dy = dy;
             }
 
-            cgu::iRect get_bounds() const {
+            cgu::fRect get_bounds() const {
                 return m_field;
             }
         };
@@ -109,10 +109,6 @@ namespace cgu {
                     m_speed.y -= 0.1f;
                 }
 
-                //if (KeyReleased(_u('R'))) {
-                //    ptr->rotate();
-                //}
-
                 p.clamped({ float(m_field.x), float(m_field.dx) - dim.x}, {float(m_field.y) , float(m_field.dy) - dim.y});
 
                 ptr->set_position(p);
@@ -133,12 +129,13 @@ namespace cgu {
             void operator()(TObj* ptr, float Dt)
             {
                 cgu::fPoint2d  p = ptr->get_position();
+                cgu::fPoint2d  dim = ptr->get_dimension();
 
                 p.x += m_speed.x * Dt * v1;
                 p.y += m_speed.y * Dt * v2;
 
-                if ((int)p.x < m_field.x || (int)p.x > m_field.dx) v1 *= -1.f;
-                if ((int)p.y < m_field.y || (int)p.y > m_field.dy) v2 *= -1.f;
+                if (p.x < m_field.x  || p.x > m_field.dx - dim.x) v1 *= -1.f;
+                if (p.y < m_field.y  || p.y > m_field.dy - dim.y) v2 *= -1.f;
 
                 ptr->set_position(p);
 
