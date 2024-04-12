@@ -3,6 +3,7 @@
 #include <vector>
 #include <Windows.h>
 #include <wchar.h>
+#include <conio.h>
 #include <algorithm>
 
 /*
@@ -13,6 +14,11 @@
 		Version  : 0.0.1
 
 */
+
+#define CR         '\r'
+#define ESCAPE     '\x1b'
+#define _DELETE    '\x7F'
+#define _CTRL_C    (char(3))
 
 
 namespace cgu {
@@ -175,7 +181,14 @@ namespace cgu {
 
 			iscrLength = length;
 			iscrWidth = width;
-
+			std::thread   thrStop([&] {
+				while (bOpen) {
+					if (_getch() == ESCAPE) {
+						bOpen = false;
+					}
+				}
+				});
+			thrStop.detach();
 			// 1. allocate space for screen pointer in type wchar_t 
 			screen = new wchar_t[iscrLength * iscrLength];
 
@@ -230,6 +243,9 @@ namespace cgu {
 			(*this)(x, y, text);
 		}
 
+		bool is_open() const {
+			return bOpen;
+		}
 
 	private:
 
@@ -246,6 +262,7 @@ namespace cgu {
 		HANDLE    hConsole;
 		DWORD     dwOldmode;
 		wchar_t*  screen;
+		bool      bOpen{ true };
 
 	};
 
