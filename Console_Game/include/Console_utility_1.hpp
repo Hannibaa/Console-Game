@@ -202,6 +202,15 @@ namespace cgu {
 				   contain(rect.x + rect.dx - 1, rect.y + rect.dy - 1);
 		}
 
+		// shrink and expand by equal distance
+
+		Rect shrink(const T& d) const {
+			return Rect(x + d, y + d, dx - T(2) * d, dy - T(2) * d);
+		}
+
+		Rect expand(const T& d) {
+			return Rect(x - d, y - d, dx + T(2) * d, dy + T(2) * d);
+		}
 	};
 
 	///////// Rectangle 
