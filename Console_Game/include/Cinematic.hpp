@@ -43,6 +43,10 @@ namespace cgu {
                 m_field.dy = dy;
             }
 
+            void set_bounds(const cgu::fRect& frect) {
+                set_bounds(frect.x, frect.y, frect.dx, frect.dy);
+            }
+
             cgu::fRect get_bounds() const {
                 return m_field;
             }
@@ -134,8 +138,11 @@ namespace cgu {
                 p.x += m_speed.x * Dt * v1;
                 p.y += m_speed.y * Dt * v2;
 
-                if (p.x < m_field.x  || p.x > m_field.dx - dim.x) v1 *= -1.f;
-                if (p.y < m_field.y  || p.y > m_field.dy - dim.y) v2 *= -1.f;
+                if (p.x < m_field.x  || p.x > m_field.x + m_field.dx - dim.x + 2.f) v1 *= -1.f;
+                if (p.y < m_field.y  || p.y > m_field.y + m_field.dy - dim.y + 2.f) v2 *= -1.f;
+
+                p.clamped(m_field.x, m_field.x + m_field.dx + 1.f,
+                    m_field.y, m_field.y + m_field.dy + 1.f);
 
                 ptr->set_position(p);
 
@@ -159,6 +166,41 @@ namespace cgu {
 
 			}
 
+        };
+
+        // with free functions
+        class FFreeMotion : public IMotion {
+
+            using FunctionReal = std::function<float(float)>;
+
+            FunctionReal  _X;
+            FunctionReal  _Y;
+            float         _t{0};
+
+        public:
+            FFreeMotion(FunctionReal X, FunctionReal Y)
+                :_X(X)
+                , _Y(Y)
+            {}
+
+            void initial_point(float t0) {
+                _t = t0;
+            }
+
+            template<typename TMotionable>
+            void operator()(TMotionable* ptr, float Dt) {
+                cgu::fPoint2d  p = ptr->get_position();
+                cgu::fPoint2d  dim = ptr->get_dimension();
+
+                _t += Dt;
+                p.x = _X(_t);
+                p.y = _Y(_t);
+
+                p.clamped(m_field.x, m_field.x + m_field.dx, m_field.y, m_field.y + m_field.dy);
+
+                ptr->set_position(p);
+
+            }
         };
 
 
